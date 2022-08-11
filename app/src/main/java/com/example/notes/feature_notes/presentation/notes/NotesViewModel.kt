@@ -8,6 +8,7 @@ import com.example.notes.feature_notes.domain.model.Note
 import com.example.notes.feature_notes.domain.use_cases.NoteUseCases
 import com.example.notes.feature_notes.domain.util.NoteOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -21,6 +22,8 @@ class NotesViewModel @Inject constructor(
     val state: State<NotesState> = _state
 
     private var recentlyDeleteNote: Note? = null
+
+    private var getNotesJob: Job? = null
 
     fun onEvent(event: NotesEvent) {
         when (event) {
@@ -51,7 +54,8 @@ class NotesViewModel @Inject constructor(
     }
 
     private fun getNotes(noteOrder: NoteOrder) {
-        noteUseCases.getNotes(noteOrder).onEach { notes ->
+        getNotesJob?.cancel()
+        getNotesJob = noteUseCases.getNotes(noteOrder).onEach { notes ->
             _state.value = state.value.copy(
                 notes = notes,
                 noteOrder = noteOrder
