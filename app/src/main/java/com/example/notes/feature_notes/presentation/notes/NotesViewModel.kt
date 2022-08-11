@@ -6,7 +6,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.notes.feature_notes.domain.model.Note
 import com.example.notes.feature_notes.domain.use_cases.NoteUseCases
+import com.example.notes.feature_notes.domain.util.NoteOrder
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,7 +25,10 @@ class NotesViewModel @Inject constructor(
     fun onEvent(event: NotesEvent) {
         when (event) {
             is NotesEvent.Order -> {
-
+                if (state.value.noteOrder::class == event.noteOrder::class && state.value.noteOrder.orderType == event.noteOrder.orderType) {
+                    return
+                }
+                getNotes(event.noteOrder)
             }
             is NotesEvent.DeleteNote -> {
                 viewModelScope.launch {
@@ -32,7 +38,8 @@ class NotesViewModel @Inject constructor(
             }
             is NotesEvent.RestoreNote -> {
                 viewModelScope.launch {
-
+                    noteUseCases.addNote(recentlyDeleteNote ?: return@launch)
+                    recentlyDeleteNote = null
                 }
             }
             is NotesEvent.ToggleOrderSection -> {
@@ -41,5 +48,14 @@ class NotesViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun getNotes(noteOrder: NoteOrder) {
+        noteUseCases.getNotes(noteOrder).onEach { notes ->
+            _state.value = state.value.copy(
+                notes = notes,
+                noteOrder = noteOrder
+            )
+        }.launchIn(viewModelScope)
     }
 }
