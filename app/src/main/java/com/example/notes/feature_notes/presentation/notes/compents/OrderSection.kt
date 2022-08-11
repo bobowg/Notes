@@ -8,7 +8,7 @@ import com.example.notes.feature_notes.domain.util.NoteOrder
 import com.example.notes.feature_notes.domain.util.OrderType
 
 @Composable
-fun OderSection(
+fun OrderSection(
     modifier: Modifier = Modifier,
     noteOrder: NoteOrder = NoteOrder.Date(OrderType.Descending),
     onOrderChange: (NoteOrder) -> Unit
